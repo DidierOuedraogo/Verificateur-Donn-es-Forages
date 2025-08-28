@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérificateur de Données CSV - Forage</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .author-info {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .author-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .author-info p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .file-section {
+            margin-bottom: 40px;
+            border: 2px solid #e8f4f8;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .file-header {
+            background: #e8f4f8;
+            padding: 20px;
+            border-bottom: 2px solid #d4e6ea;
+        }
+
+        .file-header h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .required-columns, .optional-columns {
+            margin-bottom: 10px;
+        }
+
+        .required-columns strong, .optional-columns strong {
+            color: #e74c3c;
+        }
+
+        .optional-columns strong {
+            color: #f39c12;
+        }
+
+        .file-inputs {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .file-input {
+            padding: 12px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .file-input:hover {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+
+        .file-input input {
+            display: none;
+        }
+
+        .mapping-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 5px solid #3498db;
+        }
+
+        .mapping-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .column-mapping {
+            display: grid;
+            grid-template-columns: 200px auto 200px;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e8f4f8;
+        }
+
+        .column-mapping label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .required-label {
+            color: #e74c3c !important;
+        }
+
+        .optional-label {
+            color: #f39c12 !important;
+        }
+
+        .column-mapping select {
+            padding: 8px 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        .mapping-arrow {
+            text-align: center;
+            color: #3498db;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 20px auto;
+            display: block;
+            min-width: 200px;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #2980b9, #21618c);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            font-size: 0.9rem;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            min-width: auto;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #7f8c8d, #6c7b7c);
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+        }
+
+        .result-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .result-item h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            margin: 5px;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(135deg, #229954, #1e8449);
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #fadbd8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .success {
+            color: #27ae60;
+            background: #d5f4e6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 5px solid #27ae60;
+        }
+
+        .warning {
+            color: #f39c12;
+            background: #fef9e7;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 5px solid #f39c12;
+        }
+
+        .info {
+            color: #3498db;
+            background: #ebf3fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 5px solid #3498db;
+        }
+
+        .columns-detected {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .mapping-status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .mapping-complete {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+
+        .mapping-incomplete {
+            background: #fadbd8;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .data-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .data-preview h5 {
+            background: #e9ecef;
+            padding: 10px 15px;
+            margin: 0;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .data-table {
+            overflow-x: auto;
+            max-height: 400px;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .data-table th, .data-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+            white-space: nowrap;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f5f5f5;
+        }
+
+        .inconsistency-item {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 8px 0;
+        }
+
+        .inconsistency-header {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .inconsistency-details {
+            font-size: 0.9rem;
+            color: #6c6c6c;
+        }
+
+        @media (max-width: 768px) {
+            .file-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .column-mapping {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                text-align: left;
+            }
+
+            .mapping-arrow {
+                display: none;
+            }
+
+            .data-table {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Vérificateur de Données CSV</h1>
+            <p>Comparaison automatique des fichiers de forage (Collar, Assays, Survey, Lithologie)</p>
+            <div class="author-info">
+                <h3>👤 Développé par</h3>
+                <p><strong>Didier Ouedraogo, P.Geo</strong></p>
+                <p>Spécialiste en sciences des données géologiques et minières</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Collar Section -->
+            <div class="file-section">
+                <div class="file-header">
+                    <h2>📊 Fichier Collar</h2>
+                    <div class="required-columns">
+                        <strong>Colonnes obligatoires:</strong> HoleID, Easting, Northing, Elevation, TotalDepth
+                    </div>
+                    <div class="optional-columns">
+                        <strong>Colonnes optionnelles:</strong> Type, Prospect
+                    </div>
+                </div>
+                <div class="file-inputs">
+                    <div class="input-group">
+                        <label>Ancienne version</label>
+                        <div class="file-input" onclick="document.getElementById('collar-old').click()">
+                            <input type="file" id="collar-old" accept=".csv" onchange="handleFileSelect(this, 'collar-old-name', 'collar')">
+                            <span id="collar-old-name">Cliquez pour sélectionner le fichier</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Nouvelle version</label>
+                        <div class="file-input" onclick="document.getElementById('collar-new').click()">
+                            <input type="file" id="collar-new" accept=".csv" onchange="handleFileSelect(this, 'collar-new-name', 'collar')">
+                            <span id="collar-new-name">Cliquez pour sélectionner le fichier</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="collar-mapping" class="mapping-section hidden">
+                    <h4>🔗 Mapping des colonnes - Collar</h4>
+                    <div id="collar-mapping-content"></div>
+                    <div id="collar-mapping-status" class="mapping-status"></div>
+                </div>
+            </div>
+
+            <!-- Assays Section -->
+            <div class="file-section">
+                <div class="file-header">
+                    <h2>🧪 Fichier Assays</h2>
+                    <div class="required-columns">
+                        <strong>Colonnes obligatoires:</strong> HoleID, From, To, Teneur
+                    </div>
+                    <div class="optional-columns">
+                        <strong>Colonnes optionnelles:</strong> Type, Prospect
+                    </div>
+                </div>
+                <div class="file-inputs">
+                    <div class="input-group">
+                        <label>Ancienne version</label>
+                        <div class="file-input" onclick="document.getElementById('assays-old').click()">
+                            <input type="file" id="assays-old" accept=".csv" onchange="handleFileSelect(this, 'assays-old-name', 'assays')">
+                            <span id="assays-old-name">Cliquez pour sélectionner le fichier</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Nouvelle version</label>
+                        <div class="file-input" onclick="document.getElementById('assays-new').click()">
+                            <input type="file" id="assays-new" accept=".csv" onchange="handleFileSelect(this, 'assays-new-name', 'assays')">
+                            <span id="assays-new-name">Cliquez pour sélectionner le fichier</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="assays-mapping" class="mapping-section hidden">
+                    <h4>🔗 Mapping des colonnes - Assays</h4>
+                    <div id="assays-mapping-content"></div>
+                    <div id="assays-mapping-status" class="mapping-status"></div>
+                </div>
+            </div>
+
+            <!-- Survey Section -->
+            <div class="file-section">
+                <div class="file-header">
+                    <h2>📐 Fichier Survey</h2>
+                    <div class="required-columns">
+                        <strong>Colonnes obligatoires:</strong> HoleID, Depth, Dip, Azimuth
+                    </div>
+                    <div class="optional-columns">
+                        <strong>Colonnes optionnelles:</strong> Type, Prospect
+                    </div>
+                </div>
+                <div class="file-inputs">
+                    <div class="input-group">
+                        <label>Ancienne version</label>
+                        <div class="file-input" onclick="document.getElementById('survey-old').click()">
+                            <input type="file" id="survey-old" accept=".csv" onchange="handleFileSelect(this, 'survey-old-name', 'survey')">
+                            <span id="survey-old-name">Cliquez pour sélectionner le fichier</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Nouvelle version</label>
+                        <div class="file-input" onclick="document.getElementById('survey-new').click()">
+                            <input type="file" id="survey-new" accept=".csv" onchange="handleFileSelect(this, 'survey-new-name', 'survey')">
+                            <span id="survey-new-name">Cliquez pour sélectionner le fichier</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="survey-mapping" class="mapping-section hidden">
+                    <h4>🔗 Mapping des colonnes - Survey</h4>
+                    <div id="survey-mapping-content"></div>
+                    <div id="survey-mapping-status" class="mapping-status"></div>
+                </div>
+            </div>
+
+            <!-- Lithologie Section -->
+            <div class="file-section">
+                <div class="file-header">
+                    <h2>🪨 Fichier Lithologie</h2>
+                    <div class="required-columns">
+                        <strong>Colonnes obligatoires:</strong> HoleID, From, To, Litho
+                    </div>
+                    <div class="optional-columns">
+                        <strong>Colonnes optionnelles:</strong> Type, Prospect
+                    </div>
+                </div>
+                <div class="file-inputs">
+                    <div class="input-group">
+                        <label>Ancienne version</label>
+                        <div class="file-input" onclick="document.getElementById('lithologie-old').click()">
+                            <input type="file" id="lithologie-old" accept=".csv" onchange="handleFileSelect(this, 'lithologie-old-name', 'lithologie')">
+                            <span id="lithologie-old-name">Cliquez pour sélectionner le fichier</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Nouvelle version</label>
+                        <div class="file-input" onclick="document.getElementById('lithologie-new').click()">
+                            <input type="file" id="lithologie-new" accept=".csv" onchange="handleFileSelect(this, 'lithologie-new-name', 'lithologie')">
+                            <span id="lithologie-new-name">Cliquez pour sélectionner le fichier</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="lithologie-mapping" class="mapping-section hidden">
+                    <h4>🔗 Mapping des colonnes - Lithologie</h4>
+                    <div id="lithologie-mapping-content"></div>
+                    <div id="lithologie-mapping-status" class="mapping-status"></div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <button class="btn btn-secondary" onclick="resetAllMappings()" id="resetBtn">
+                    🔄 Réinitialiser tous les mappings
+                </button>
+                <button class="btn" onclick="compareFiles()" id="compareBtn">
+                    🔍 Lancer la Comparaison
+                </button>
+            </div>
+
+            <div id="results" class="results" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration des types de fichiers et leurs colonnes
+        const fileConfigs = {
+            collar: {
+                required: ['HoleID', 'Easting', 'Northing', 'Elevation', 'TotalDepth'],
+                optional: ['Type', 'Prospect']
+            },
+            assays: {
+                required: ['HoleID', 'From', 'To', 'Teneur'],
+                optional: ['Type', 'Prospect']
+            },
+            survey: {
+                required: ['HoleID', 'Depth', 'Dip', 'Azimuth'],
+                optional: ['Type', 'Prospect']
+            },
+            lithologie: {
+                required: ['HoleID', 'From', 'To', 'Litho'],
+                optional: ['Type', 'Prospect']
+            }
+        };
+
+        // Stocker les données des fichiers et mappings
+        let filesData = {};
+        let fileMappings = {};
+        let fileHeaders = {};
+
+        function handleFileSelect(input, displayId, fileType) {
+            const file = input.files[0];
+            const display = document.getElementById(displayId);
+            
+            if (file) {
+                display.textContent = file.name;
+                display.style.color = '#27ae60';
+                
+                // Analyser le fichier et créer le mapping
+                analyzeFileAndCreateMapping(file, fileType, input.id.includes('old') ? 'old' : 'new');
+            } else {
+                display.textContent = 'Cliquez pour sélectionner le fichier';
+                display.style.color = '';
+            }
+        }
+
+        function detectSeparator(text) {
+            const lines = text.split('\n');
+            if (lines.length < 2) return ',';
+            
+            const header = lines[0];
+            const separators = [',', ';', '\t', '|'];
+            let bestSeparator = ',';
+            let maxColumns = 0;
+            
+            for (const sep of separators) {
+                const columns = header.split(sep).length;
+                if (columns > maxColumns) {
+                    maxColumns = columns;
+                    bestSeparator = sep;
+                }
+            }
+            
+            return bestSeparator;
+        }
+
+        function parseCSVHeaders(text, separator) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 1) return [];
+            
+            return lines[0].split(separator).map(h => h.trim().replace(/['"]/g, ''));
+        }
+
+        async function analyzeFileAndCreateMapping(file, fileType, version) {
+            try {
+                const text = await readFile(file);
+                const separator = detectSeparator(text);
+                const headers = parseCSVHeaders(text, separator);
+                
+                // Stocker les en-têtes
+                if (!fileHeaders[fileType]) fileHeaders[fileType] = {};
+                fileHeaders[fileType][version] = headers;
+                
+                // Vérifier si nous avons les deux versions pour créer le mapping
+                if (fileHeaders[fileType].old && fileHeaders[fileType].new) {
+                    createMappingInterface(fileType);
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'analyse du fichier:', error);
+            }
+        }
+
+        function createMappingInterface(fileType) {
+            const mappingDiv = document.getElementById(`${fileType}-mapping`);
+            const contentDiv = document.getElementById(`${fileType}-mapping-content`);
+            const statusDiv = document.getElementById(`${fileType}-mapping-status`);
+            
+            mappingDiv.classList.remove('hidden');
+            
+            // Combiner les en-têtes des deux versions (unique)
+            const oldHeaders = fileHeaders[fileType].old || [];
+            const newHeaders = fileHeaders[fileType].new || [];
+            const allHeaders = [...new Set([...oldHeaders, ...newHeaders])];
+            
+            // Créer les options pour les select
+            const createOptions = (headers) => {
+                return ['', ...headers].map(header => 
+                    `<option value="${header}">${header || '-- Non mappé --'}</option>`
+                ).join('');
+            };
+            
+            const oldOptions = createOptions(oldHeaders);
+            const newOptions = createOptions(newHeaders);
+            
+            // Créer l'interface de mapping
+            let mappingHTML = '';
+            
+            // Colonnes obligatoires
+            fileConfigs[fileType].required.forEach(reqCol => {
+                mappingHTML += `
+                    <div class="column-mapping">
+                        <label class="required-label">${reqCol} *</label>
+                        <div class="mapping-arrow">→</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <select id="${fileType}-${reqCol}-old" onchange="updateMappingStatus('${fileType}')">
+                                ${oldOptions}
+                            </select>
+                            <select id="${fileType}-${reqCol}-new" onchange="updateMappingStatus('${fileType}')">
+                                ${newOptions}
+                            </select>
+                        </div>
+                    </div>`;
+            });
+            
+            // Colonnes optionnelles
+            fileConfigs[fileType].optional.forEach(optCol => {
+                mappingHTML += `
+                    <div class="column-mapping">
+                        <label class="optional-label">${optCol}</label>
+                        <div class="mapping-arrow">→</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <select id="${fileType}-${optCol}-old" onchange="updateMappingStatus('${fileType}')">
+                                ${oldOptions}
+                            </select>
+                            <select id="${fileType}-${optCol}-new" onchange="updateMappingStatus('${fileType}')">
+                                ${newOptions}
+                            </select>
+                        </div>
+                    </div>`;
+            });
+            
+            contentDiv.innerHTML = mappingHTML;
+            
+            // Auto-mapping intelligent
+            performAutoMapping(fileType);
+            updateMappingStatus(fileType);
+        }
+
+        function performAutoMapping(fileType) {
+            const autoMappingRules = {
+                collar: {
+                    'HoleID': ['HoleID', 'Hole_ID', 'HOLEID', 'hole_id', 'ID', 'id'],
+                    'Easting': ['Easting', 'EASTING', 'easting', 'X', 'x', 'East', 'EAST'],
+                    'Northing': ['Northing', 'NORTHING', 'northing', 'Y', 'y', 'North', 'NORTH'],
+                    'Elevation': ['Elevation', 'ELEVATION', 'elevation', 'Z', 'z', 'Elev', 'ELEV', 'Alt', 'Altitude'],
+                    'TotalDepth': ['TotalDepth', 'Total_Depth', 'TOTALDEPTH', 'total_depth', 'Depth', 'DEPTH', 'depth'],
+                    'Type': ['Type', 'TYPE', 'type'],
+                    'Prospect': ['Prospect', 'PROSPECT', 'prospect']
+                },
+                assays: {
+                    'HoleID': ['HoleID', 'Hole_ID', 'HOLEID', 'hole_id', 'ID', 'id'],
+                    'From': ['From', 'FROM', 'from', 'Depth_From', 'depth_from', 'Start', 'start'],
+                    'To': ['To', 'TO', 'to', 'Depth_To', 'depth_to', 'End', 'end'],
+                    'Teneur': ['Teneur', 'TENEUR', 'teneur', 'Grade', 'GRADE', 'grade', 'Value', 'value', 'Au', 'AU'],
+                    'Type': ['Type', 'TYPE', 'type'],
+                    'Prospect': ['Prospect', 'PROSPECT', 'prospect']
+                },
+                survey: {
+                    'HoleID': ['HoleID', 'Hole_ID', 'HOLEID', 'hole_id', 'ID', 'id'],
+                    'Depth': ['Depth', 'DEPTH', 'depth', 'At', 'AT', 'at'],
+                    'Dip': ['Dip', 'DIP', 'dip', 'Inclination', 'INCLINATION', 'incl'],
+                    'Azimuth': ['Azimuth', 'AZIMUTH', 'azimuth', 'Az', 'AZ', 'az', 'Bearing', 'bearing'],
+                    'Type': ['Type', 'TYPE', 'type'],
+                    'Prospect': ['Prospect', 'PROSPECT', 'prospect']
+                },
+                lithologie: {
+                    'HoleID': ['HoleID', 'Hole_ID', 'HOLEID', 'hole_id', 'ID', 'id'],
+                    'From': ['From', 'FROM', 'from', 'Depth_From', 'depth_from', 'Start', 'start'],
+                    'To': ['To', 'TO', 'to', 'Depth_To', 'depth_to', 'End', 'end'],
+                    'Litho': ['Litho', 'LITHO', 'litho', 'Lithology', 'LITHOLOGY', 'lithology', 'Rock', 'rock'],
+                    'Type': ['Type', 'TYPE', 'type'],
+                    'Prospect': ['Prospect', 'PROSPECT', 'prospect']
+                }
+            };
+
+            const rules = autoMappingRules[fileType];
+            const oldHeaders = fileHeaders[fileType].old || [];
+            const newHeaders = fileHeaders[fileType].new || [];
+
+            Object.keys(rules).forEach(standardCol => {
+                const variants = rules[standardCol];
+                
+                // Auto-mapping pour l'ancien fichier
+                const oldSelect = document.getElementById(`${fileType}-${standardCol}-old`);
+                if (oldSelect) {
+                    for (const variant of variants) {
+                        const match = oldHeaders.find(h => h.toLowerCase().trim() === variant.toLowerCase().trim());
+                        if (match) {
+                            oldSelect.value = match;
+                            break;
+                        }
+                    }
+                }
+                
+                // Auto-mapping pour le nouveau fichier
+                const newSelect = document.getElementById(`${fileType}-${standardCol}-new`);
+                if (newSelect) {
+                    for (const variant of variants) {
+                        const match = newHeaders.find(h => h.toLowerCase().trim() === variant.toLowerCase().trim());
+                        if (match) {
+                            newSelect.value = match;
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateMappingStatus(fileType) {
+            const statusDiv = document.getElementById(`${fileType}-mapping-status`);
+            const requiredCols = fileConfigs[fileType].required;
+            
+            let missingMappings = [];
+            let completeMappings = [];
+            
+            requiredCols.forEach(col => {
+                const oldSelect = document.getElementById(`${fileType}-${col}-old`);
+                const newSelect = document.getElementById(`${fileType}-${col}-new`);
+                
+                if (oldSelect && newSelect) {
+                    if (oldSelect.value && newSelect.value) {
+                        completeMappings.push(col);
+                    } else {
+                        missingMappings.push(col);
+                    }
+                }
+            });
+            
+            if (missingMappings.length === 0) {
+                statusDiv.className = 'mapping-status mapping-complete';
+                statusDiv.innerHTML = `✅ Mapping complet! ${completeMappings.length} colonnes obligatoires mappées.`;
+            } else {
+                statusDiv.className = 'mapping-status mapping-incomplete';
+                statusDiv.innerHTML = `❌ Mapping incomplet. Colonnes manquantes: ${missingMappings.join(', ')}`;
+            }
+        }
+
+        function getCurrentMapping(fileType) {
+            const mapping = { old: {}, new: {} };
+            const allCols = [...fileConfigs[fileType].required, ...fileConfigs[fileType].optional];
+            
+            allCols.forEach(col => {
+                const oldSelect = document.getElementById(`${fileType}-${col}-old`);
+                const newSelect = document.getElementById(`${fileType}-${col}-new`);
+                
+                if (oldSelect && oldSelect.value) {
+                    mapping.old[col] = oldSelect.value;
+                }
+                if (newSelect && newSelect.value) {
+                    mapping.new[col] = newSelect.value;
+                }
+            });
+            
+            return mapping;
+        }
+
+        function resetAllMappings() {
+            Object.keys(fileConfigs).forEach(fileType => {
+                const mappingDiv = document.getElementById(`${fileType}-mapping`);
+                mappingDiv.classList.add('hidden');
+            });
+            
+            fileHeaders = {};
+            fileMappings = {};
+            
+            // Réinitialiser les sélecteurs de fichiers
+            Object.keys(fileConfigs).forEach(fileType => {
+                document.getElementById(`${fileType}-old`).value = '';
+                document.getElementById(`${fileType}-new`).value = '';
+                document.getElementById(`${fileType}-old-name`).textContent = 'Cliquez pour sélectionner le fichier';
+                document.getElementById(`${fileType}-new-name`).textContent = 'Cliquez pour sélectionner le fichier';
+                document.getElementById(`${fileType}-old-name`).style.color = '';
+                document.getElementById(`${fileType}-new-name`).style.color = '';
+            });
+        }
+
+        function parseCSV(text, separator) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return { headers: [], data: [] };
+            
+            const headers = lines[0].split(separator).map(h => h.trim().replace(/['"]/g, ''));
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    const row = lines[i].split(separator).map(cell => cell.trim().replace(/['"]/g, ''));
+                    const rowObj = {};
+                    headers.forEach((header, index) => {
+                        rowObj[header] = row[index] || '';
+                    });
+                    data.push(rowObj);
+                }
+            }
+            
+            return { headers, data };
+        }
+
+        function normalizeData(data, mapping) {
+            return data.map(row => {
+                const normalizedRow = {};
+                for (const [standardName, originalHeader] of Object.entries(mapping)) {
+                    normalizedRow[standardName] = row[originalHeader] || '';
+                }
+                // Conserver aussi les colonnes originales pour l'export
+                for (const [key, value] of Object.entries(row)) {
+                    if (!Object.values(mapping).includes(key)) {
+                        normalizedRow[key] = value;
+                    }
+                }
+                return normalizedRow;
+            });
+        }
+
+        function analyzeDataConsistency(data, fileType) {
+            const inconsistencies = [];
+            const holeGroups = new Map();
+            
+            // Regrouper par HoleID
+            data.forEach((row, index) => {
+                const holeId = row.HoleID;
+                if (!holeGroups.has(holeId)) {
+                    holeGroups.set(holeId, []);
+                }
+                holeGroups.get(holeId).push({ ...row, originalIndex: index });
+            });
+            
+            // Analyser la cohérence pour chaque HoleID
+            holeGroups.forEach((rows, holeId) => {
+                if (rows.length > 1) {
+                    const requiredCols = fileConfigs[fileType].required.filter(col => col !== 'HoleID');
+                    
+                    // Pour collar, vérifier que Easting, Northing, Elevation, TotalDepth sont identiques
+                    if (fileType === 'collar') {
+                        const checkCols = ['Easting', 'Northing', 'Elevation', 'TotalDepth'];
+                        checkCols.forEach(col => {
+                            const values = rows.map(r => r[col]).filter(v => v !== '');
+                            const uniqueValues = [...new Set(values)];
+                            if (uniqueValues.length > 1) {
+                                inconsistencies.push({
+                                    holeId,
+                                    column: col,
+                                    values: uniqueValues,
+                                    message: `Valeurs différentes pour ${col} dans le même HoleID: ${uniqueValues.join(', ')}`
+                                });
+                            }
+                        });
+                    }
+                    
+                    // Pour les autres types, vérifier la cohérence des colonnes optionnelles
+                    const optionalCols = fileConfigs[fileType].optional || [];
+                    optionalCols.forEach(col => {
+                        const values = rows.map(r => r[col]).filter(v => v !== '');
+                        const uniqueValues = [...new Set(values)];
+                        if (uniqueValues.length > 1) {
+                            inconsistencies.push({
+                                holeId,
+                                column: col,
+                                values: uniqueValues,
+                                message: `Valeurs différentes pour ${col} dans le même HoleID: ${uniqueValues.join(', ')}`
+                            });
+                        }
+                    });
+                }
+            });
+            
+            return inconsistencies;
+        }
+
+        function createDataPreview(data, title, maxRows = 10) {
+            if (!data || data.length === 0) return '';
+            
+            const displayData = data.slice(0, maxRows);
+            const headers = Object.keys(displayData[0]);
+            
+            let tableHTML = `
+                <div class="data-preview">
+                    <h5>${title} ${data.length > maxRows ? `(${maxRows} premières lignes sur ${data.length})` : `(${data.length} lignes)`}</h5>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    ${headers.map(h => `<th>${h}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${displayData.map(row => 
+                                    `<tr>${headers.map(h => `<td>${row[h] || ''}</td>`).join('')}</tr>`
+                                ).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            
+            return tableHTML;
+        }
+
+        async function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+
+        function compareData(oldData, newData, keyField = 'HoleID') {
+            const oldMap = new Map();
+            const newMap = new Map();
+            
+            // Créer des maps pour faciliter la comparaison
+            oldData.forEach(row => {
+                const key = row[keyField];
+                if (!oldMap.has(key)) {
+                    oldMap.set(key, []);
+                }
+                oldMap.set(key, [...oldMap.get(key), row]);
+            });
+            
+            newData.forEach(row => {
+                const key = row[keyField];
+                if (!newMap.has(key)) {
+                    newMap.set(key, []);
+                }
+                newMap.set(key, [...newMap.get(key), row]);
+            });
+            
+            const oldHoles = new Set(oldMap.keys());
+            const newHoles = new Set(newMap.keys());
+            const commonHoles = new Set([...oldHoles].filter(h => newHoles.has(h)));
+            const addedHoles = new Set([...newHoles].filter(h => !oldHoles.has(h)));
+            const removedHoles = new Set([...oldHoles].filter(h => !newHoles.has(h)));
+            
+            const changes = [];
+            const addedData = [];
+            
+            // Données ajoutées (nouveaux HoleID)
+            addedHoles.forEach(holeId => {
+                newMap.get(holeId).forEach(row => {
+                    addedData.push({ ...row, ChangeType: 'ADDED_HOLE' });
+                });
+            });
+            
+            // Comparaison détaillée pour les HoleID communs
+            commonHoles.forEach(holeId => {
+                const oldRows = oldMap.get(holeId);
+                const newRows = newMap.get(holeId);
+                
+                // Nouvelles lignes pour ce HoleID
+                if (newRows.length > oldRows.length) {
+                    const extraRows = newRows.slice(oldRows.length);
+                    extraRows.forEach(row => {
+                        addedData.push({ ...row, ChangeType: 'ADDED_ROW' });
+                    });
+                }
+                
+                // Modifications des lignes existantes
+                const minLength = Math.min(oldRows.length, newRows.length);
+                for (let i = 0; i < minLength; i++) {
+                    const oldRow = oldRows[i];
+                    const newRow = newRows[i];
+                    
+                    const rowChanges = {};
+                    let hasChanges = false;
+                    
+                    Object.keys(newRow).forEach(key => {
+                        if (oldRow[key] !== newRow[key]) {
+                            rowChanges[key] = { old: oldRow[key], new: newRow[key] };
+                            hasChanges = true;
+                        }
+                    });
+                    
+                    if (hasChanges) {
+                        changes.push({
+                            holeId,
+                            rowIndex: i,
+                            changes: rowChanges,
+                            fullRow: newRow
+                        });
+                    }
+                }
+            });
+            
+            return {
+                totalOldHoles: oldHoles.size,
+                totalNewHoles: newHoles.size,
+                commonHoles: commonHoles.size,
+                addedHoles: addedHoles.size,
+                removedHoles: removedHoles.size,
+                addedData,
+                changes,
+                addedHolesList: Array.from(addedHoles),
+                removedHolesList: Array.from(removedHoles)
+            };
+        }
+
+        function downloadCSV(data, filename) {
+            if (data.length === 0) {
+                alert('Aucune donnée à exporter');
+                return;
+            }
+            
+            const headers = Object.keys(data[0]);
+            const csvContent = [
+                headers.join(','),
+                ...data.map(row => headers.map(header => 
+                    `"${(row[header] || '').toString().replace(/"/g, '""')}"`
+                ).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+
+        async function compareFiles() {
+            const resultsDiv = document.getElementById('results');
+            const compareBtn = document.getElementById('compareBtn');
+            
+            try {
+                compareBtn.disabled = true;
+                compareBtn.innerHTML = '<div class="spinner"></div>Traitement en cours...';
+                
+                resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Analyse des fichiers en cours...</p></div>';
+                resultsDiv.style.display = 'block';
+                
+                let hasFiles = false;
+                let allResults = '';
+                
+                for (const fileType of Object.keys(fileConfigs)) {
+                    const oldInput = document.getElementById(`${fileType}-old`);
+                    const newInput = document.getElementById(`${fileType}-new`);
+                    
+                    if (oldInput.files[0] && newInput.files[0]) {
+                        hasFiles = true;
+                        
+                        // Vérifier le mapping
+                        const mapping = getCurrentMapping(fileType);
+                        const requiredCols = fileConfigs[fileType].required;
+                        const missingMappings = requiredCols.filter(col => 
+                            !mapping.old[col] || !mapping.new[col]
+                        );
+                        
+                        let resultHtml = `<div class="result-item">
+                            <h3>📊 Analyse du fichier ${fileType.charAt(0).toUpperCase() + fileType.slice(1)}</h3>`;
+                        
+                        if (missingMappings.length > 0) {
+                            resultHtml += `<div class="error">
+                                <strong>Erreur de mapping:</strong> Les colonnes suivantes ne sont pas mappées: ${missingMappings.join(', ')}<br>
+                                Veuillez compléter le mapping avant de lancer la comparaison.
+                            </div></div>`;
+                            allResults += resultHtml;
+                            continue;
+                        }
+                        
+                        // Lire les fichiers
+                        const oldText = await readFile(oldInput.files[0]);
+                        const newText = await readFile(newInput.files[0]);
+                        
+                        // Détecter les séparateurs
+                        const oldSeparator = detectSeparator(oldText);
+                        const newSeparator = detectSeparator(newText);
+                        
+                        // Parser les CSV
+                        const oldParsed = parseCSV(oldText, oldSeparator);
+                        const newParsed = parseCSV(newText, newSeparator);
+                        
+                        // Normaliser les données avec le mapping utilisateur
+                        const oldNormalizedData = normalizeData(oldParsed.data, mapping.old);
+                        const newNormalizedData = normalizeData(newParsed.data, mapping.new);
+                        
+                        // Analyser la cohérence des données
+                        const oldInconsistencies = analyzeDataConsistency(oldNormalizedData, fileType);
+                        const newInconsistencies = analyzeDataConsistency(newNormalizedData, fileType);
+                        
+                        // Afficher les informations de mapping
+                        resultHtml += `<div class="success">
+                            <strong>✅ Mapping utilisé:</strong><br>
+                            ${Object.entries(mapping.old).map(([std, orig]) => 
+                                `${std}: "${orig}" (ancien) → "${mapping.new[std]}" (nouveau)`
+                            ).join('<br>')}
+                        </div>`;
+                        
+                        // Afficher les incohérences si trouvées
+                        if (oldInconsistencies.length > 0) {
+                            resultHtml += `<div class="warning">
+                                <strong>⚠️ Incohérences détectées dans l'ancien fichier:</strong>
+                                ${oldInconsistencies.map(inc => 
+                                    `<div class="inconsistency-item">
+                                        <div class="inconsistency-header">HoleID: ${inc.holeId}</div>
+                                        <div class="inconsistency-details">${inc.message}</div>
+                                    </div>`
+                                ).join('')}
+                            </div>`;
+                        }
+                        
+                        if (newInconsistencies.length > 0) {
+                            resultHtml += `<div class="warning">
+                                <strong>⚠️ Incohérences détectées dans le nouveau fichier:</strong>
+                                ${newInconsistencies.map(inc => 
+                                    `<div class="inconsistency-item">
+                                        <div class="inconsistency-header">HoleID: ${inc.holeId}</div>
+                                        <div class="inconsistency-details">${inc.message}</div>
+                                    </div>`
+                                ).join('')}
+                            </div>`;
+                        }
+                        
+                        // Comparer les données
+                        const comparison = compareData(oldNormalizedData, newNormalizedData);
+                        
+                        // Afficher les statistiques
+                        resultHtml += `
+                            <div class="stats">
+                                <div class="stat-card">
+                                    <div class="stat-number">${comparison.totalOldHoles}</div>
+                                    <div class="stat-label">HoleID anciens</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">${comparison.totalNewHoles}</div>
+                                    <div class="stat-label">HoleID nouveaux</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">${comparison.commonHoles}</div>
+                                    <div class="stat-label">HoleID identiques</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">${comparison.addedHoles}</div>
+                                    <div class="stat-label">HoleID ajoutés</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">${comparison.removedHoles}</div>
+                                    <div class="stat-label">HoleID supprimés</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">${oldInconsistencies.length + newInconsistencies.length}</div>
+                                    <div class="stat-label">Incohérences détectées</div>
+                                </div>
+                            </div>`;
+                        
+                        // Aperçu des nouvelles données (sans afficher la liste des HoleID)
+                        if (comparison.addedHoles > 0) {
+                            const newHoleData = comparison.addedData.filter(row => row.ChangeType === 'ADDED_HOLE');
+                            if (newHoleData.length > 0) {
+                                resultHtml += createDataPreview(newHoleData, '📋 Aperçu des nouveaux HoleID ajoutés', 10);
+                            }
+                        }
+                        
+                        if (comparison.removedHoles > 0) {
+                            resultHtml += `<div class="error">
+                                <strong>⚠️ ${comparison.removedHoles} HoleID ont été supprimés</strong>
+                            </div>`;
+                        }
+                        
+                        if (comparison.changes.length > 0) {
+                            resultHtml += `<div class="warning">
+                                <strong>📝 ${comparison.changes.length} modifications détectées dans les données existantes</strong>
+                            </div>`;
+                        }
+                        
+                        // Boutons d'export
+                        if (comparison.addedData.length > 0 || comparison.changes.length > 0) {
+                            resultHtml += `<div style="margin-top: 20px;">`;
+                            
+                            if (comparison.addedData.length > 0) {
+                                resultHtml += `<button class="btn export-btn" onclick="downloadCSV(filesData['${fileType}_added'], '${fileType}_nouvelles_donnees.csv')">
+                                    📥 Exporter nouvelles données (${comparison.addedData.length} lignes)
+                                </button>`;
+                                filesData[`${fileType}_added`] = comparison.addedData;
+                            }
+                            
+                            if (comparison.changes.length > 0) {
+                                const changesData = comparison.changes.map(change => ({
+                                    HoleID: change.holeId,
+                                    RowIndex: change.rowIndex,
+                                    Changes: JSON.stringify(change.changes),
+                                    ...change.fullRow
+                                }));
+                                filesData[`${fileType}_changes`] = changesData;
+                                
+                                resultHtml += `<button class="btn export-btn" onclick="downloadCSV(filesData['${fileType}_changes'], '${fileType}_modifications.csv')">
+                                    📥 Exporter modifications (${comparison.changes.length} changements)
+                                </button>`;
+                            }
+                            
+                            resultHtml += `</div>`;
+                        }
+                        
+                        resultHtml += `</div>`;
+                        allResults += resultHtml;
+                    }
+                }
+                
+                if (!hasFiles) {
+                    resultsDiv.innerHTML = `<div class="error">
+                        Veuillez sélectionner au moins une paire de fichiers (ancien et nouveau) pour effectuer la comparaison.
+                    </div>`;
+                } else {
+                    resultsDiv.innerHTML = allResults;
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">
+                    <strong>Erreur lors du traitement:</strong> ${error.message}
+                </div>`;
+            } finally {
+                compareBtn.disabled = false;
+                compareBtn.innerHTML = '🔍 Lancer la Comparaison';
+            }
+        }
+    </script>
+</body>
+</html>
